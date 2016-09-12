@@ -127,7 +127,7 @@ if (isset($_POST['type'])) {
             }
 
             // is pwd empty?
-            if (empty($pw)) {
+            if (empty($pw) && (isset($_SESSION['settings']['create_item_without_password']) && $_SESSION['settings']['create_item_without_password'] !== "1")) {
                 echo prepareExchangedData(array("error" => "ERR_PWD_EMPTY"), "encode");
                 break;
             }
@@ -154,31 +154,36 @@ if (isset($_POST['type'])) {
                 (isset($_SESSION['settings']['duplicate_item']) && $_SESSION['settings']['duplicate_item'] == 1)
             ) {
                 // encrypt PW
-                if ($dataReceived['salt_key_set'] == 1 && isset($dataReceived['salt_key_set']) && $dataReceived['is_pf'] == 1 && isset($dataReceived['is_pf'])) {
-                    if (DEFUSE_ENCRYPTION === TRUE) {
-                        $passwd = crypto($pw, $_SESSION['my_sk'], "encrypt");
+                if ($_SESSION['settings']['create_item_without_password'] !== "1") {
+                    if ($dataReceived['salt_key_set'] == 1 && isset($dataReceived['salt_key_set']) && $dataReceived['is_pf'] == 1 && isset($dataReceived['is_pf'])) {
+                        if (DEFUSE_ENCRYPTION === TRUE) {
+                            $passwd = crypto($pw, $_SESSION['my_sk'], "encrypt");
+                        } else {
+                            $passwd = cryption($pw, $_SESSION['my_sk'], "", "encrypt");
+                        }
+                        $restictedTo = $_SESSION['user_id'];
                     } else {
-                        $passwd = cryption($pw, $_SESSION['my_sk'], "", "encrypt");
+                        if (DEFUSE_ENCRYPTION === TRUE) {
+                            $passwd = crypto($pw, "", "encrypt");
+                        } else {
+                            $passwd = cryption($pw, SALT, "", "encrypt");
+                        }
                     }
-                    $restictedTo = $_SESSION['user_id'];
-                } else {
-                    if (DEFUSE_ENCRYPTION === TRUE) {
-                        $passwd = crypto($pw, "", "encrypt");
-                    } else {
-                        $passwd = cryption($pw, SALT, "", "encrypt");
-                    }
-                }
 
-                if (DEFUSE_ENCRYPTION === TRUE) {
-                    if (!empty($passwd["error"])) {
-                        echo prepareExchangedData(array("error" => "ERR_ENCRYPTION", "msg" => $passwd["error"]), "encode");
-                        break;
+                    if (DEFUSE_ENCRYPTION === TRUE) {
+                        if (!empty($passwd["error"])) {
+                            echo prepareExchangedData(array("error" => "ERR_ENCRYPTION", "msg" => $passwd["error"]), "encode");
+                            break;
+                        }
+                    } else {
+                        if (empty($passwd["string"])) {
+                            echo prepareExchangedData(array("error" => "ERR_ENCRYPTION_NOT_CORRECT"), "encode");
+                            break;
+                        }
                     }
                 } else {
-                    if (empty($passwd["string"])) {
-                        echo prepareExchangedData(array("error" => "ERR_ENCRYPTION_NOT_CORRECT"), "encode");
-                        break;
-                    }
+                    $passwd['string'] = '';
+                    $passwd['iv'] = '';
                 }
 
                 // ADD item
@@ -451,17 +456,22 @@ if (isset($_POST['type'])) {
                         $dataReceived['id']
                     );
                     // encrypt PW
-                    if ($dataReceived['salt_key_set'] == 1 && isset($dataReceived['salt_key_set']) && $dataReceived['is_pf'] == 1 && isset($dataReceived['is_pf'])) {
-                        $sentPw = $pw;
-                        $passwd = cryption($pw, $_SESSION['my_sk'], "", "encrypt");
-                        $restictedTo = $_SESSION['user_id'];
-                    } else {
-                        $passwd = cryption($pw, SALT, "", "encrypt");
-                    }
+                    if ($_SESSION['settings']['create_item_without_password'] == 0) {
+                        if ($dataReceived['salt_key_set'] == 1 && isset($dataReceived['salt_key_set']) && $dataReceived['is_pf'] == 1 && isset($dataReceived['is_pf'])) {
+                            $sentPw = $pw;
+                            $passwd = cryption($pw, $_SESSION['my_sk'], "", "encrypt");
+                            $restictedTo = $_SESSION['user_id'];
+                        } else {
+                            $passwd = cryption($pw, SALT, "", "encrypt");
+                        }
 
-                    if (!empty($passwd["error"])) {
-                        echo prepareExchangedData(array("error" => $passwd["error"]), "encode");
-                        break;
+                        if (!empty($passwd["error"])) {
+                            echo prepareExchangedData(array("error" => $passwd["error"]), "encode");
+                            break;
+                        }
+                    } else {
+                        $passwd['string'] = '';
+                        $passwd['iv'] = '';
                     }
 
                     // ---Manage tags
@@ -1970,7 +1980,7 @@ if (isset($_POST['type'])) {
                         }
                         $html .= '</a>';
                         // increment array for icons shortcuts (don't do if option is not enabled)
-                        if (isset($_SESSION['settings']['copy_to_clipboard_small_icons']) && $_SESSION['settings']['copy_to_clipboard_small_icons'] == 1) {
+                        if (isset($_SESSION['settings']['copy_to_clipboard_small_icons']) && $_SESSION['settings']['copy_to_clipboard_small_icons'] == 1 && isset($_SESSION['settings']['create_item_without_password']) && $_SESSION['settings']['create_item_without_password'] != 1) {
                             if ($need_sk == true && isset($_SESSION['my_sk'])) {
                                 $pw = cryption($record['pw'], $_SESSION['my_sk'], $record['pw_iv'], "decrypt");
                             } else {

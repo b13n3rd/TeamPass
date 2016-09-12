@@ -57,6 +57,7 @@ global $LANG;
 $LANG = array (
     'enable_language_file' => '1', // Set to 0 to remove language from list. To translate, change to 1 to show this language in list. (future use)
     
+    'admin_setting_create_item_without_password' => 'Item can be created without a password',
     'user_ga_code' => 'Email Google Authentication to user',
     'send_ga_code' => 'Set and email Google Authentication code',
     'error_no_email' => 'This user has no email address set!',

@@ -769,6 +769,16 @@ echo '
                     </td><td>
                         <div class="toggle toggle-modern" id="enable_delete_after_consultation" data-toggle-on="', isset($_SESSION['settings']['enable_delete_after_consultation']) && $_SESSION['settings']['enable_delete_after_consultation'] == 1 ? 'true' : 'false', '"></div><input type="hidden" id="enable_delete_after_consultation_input" name="enable_delete_after_consultation_input" value="', isset($_SESSION['settings']['enable_delete_after_consultation']) && $_SESSION['settings']['enable_delete_after_consultation'] == 1 ? '1' : '0', '" />
                 </td></tr>';
+// Enable create_item_without_password
+echo '
+                <tr><td>
+                    <i class="fa fa-chevron-right mi-grey-1" style="margin-right: .3em;">&nbsp;</i>
+                    <label>
+                        '.$LANG['admin_setting_create_item_without_password'].'
+                    </label>
+                    </td><td>
+                        <div class="toggle toggle-modern" id="create_item_without_password" data-toggle-on="', isset($_SESSION['settings']['create_item_without_password']) && $_SESSION['settings']['create_item_without_password'] == 1 ? 'true' : 'false', '"></div><input type="hidden" id="create_item_without_password_input" name="create_item_without_password_input" value="', isset($_SESSION['settings']['create_item_without_password']) && $_SESSION['settings']['create_item_without_password'] == 1 ? '1' : '0', '" />
+                </td></tr>';
 
 echo '<tr><td colspan="3"><hr /></td></tr>';
 // Enable Printing

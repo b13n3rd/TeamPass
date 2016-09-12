@@ -558,7 +558,7 @@ function AjouterItem()
     }
 
     if ($("#label").val() == "") erreur = "<?php echo $LANG['error_label'];?>";
-    else if ($("#pw1").val() == "") erreur = "<?php echo $LANG['error_pw'];?>";
+    else if ($("#create_item_without_password").val() !== "1" && $("#pw1").val() === "") erreur = " <?php echo $LANG['error_pw'];?>";
     else if ($("#categorie").val() == "na") erreur = "<?php echo $LANG['error_group'];?>";
     else if ($("#pw1").val() != $("#pw2").val()) erreur = "<?php echo $LANG['error_confirm'];?>";
     else if ($("#enable_delete_after_consultation").is(':checked') && (($("#times_before_deletion").val() < 1 && $("#deletion_after_date").val() == "") || ($("#times_before_deletion").val() == "" && $("#deletion_after_date").val() == ""))) erreur = "<?php echo $LANG['error_times_before_deletion'];?>";
@@ -566,6 +566,8 @@ function AjouterItem()
     else{
         //Check pw complexity level
         if (
+            $("#create_item_without_password").val() == 1
+            ||
             ($("#bloquer_creation_complexite").val() == 0 && parseInt($("#mypassword_complex").val()) >= parseInt($("#complexite_groupe").val()))
             ||
             ($("#bloquer_creation_complexite").val() == 1)
@@ -757,21 +759,24 @@ function EditerItem()
     }
 
     if ($('#edit_label').val() == "") erreur = "<?php echo addslashes($LANG['error_label']);?>";
-    else if ($("#edit_pw1").val() == "") erreur = "<?php echo addslashes($LANG['error_pw']);?>";
+    else if ($("#create_item_without_password").val() !== "1" && $("#edit_pw1").val() == "") erreur = "<?php echo addslashes($LANG['error_pw']);?>";
     else if ($("#edit_pw1").val() != $("#edit_pw2").val()) erreur = "<?php echo addslashes($LANG['error_confirm']);?>";
     else if ($("#edit_tags").val() != "" && reg.test($("#edit_tags").val())) erreur = "<?php echo addslashes($LANG['error_tags']);?>";
     else if ($("#edit_categorie option:selected").val() == "" || typeof  $("#edit_categorie option:selected").val() === "undefined")  erreur = "<?php echo addslashes($LANG['error_no_selected_folder']);?>";
     else{
         //Check pw complexity level
-        if ((
+        if (
+            $("#create_item_without_password").val() == 1
+            ||
+            (
                 $("#bloquer_modification_complexite").val() == 0 &&
                 parseInt($("#edit_mypassword_complex").val()) >= parseInt($("#complexite_groupe").val())
-           )
+            )
             ||
             ($("#bloquer_modification_complexite").val() == 1)
             ||
             ($('#recherche_group_pf').val() == 1 && $('#personal_sk_set').val() == 1)
-      ) {
+        ) {
             LoadingPage();  //afficher image de chargement
             var annonce = 0;
             if ($('#edit_annonce').attr('checked')) annonce = 1;
@@ -1247,7 +1252,11 @@ function AfficherDetailsItem(id, salt_key_required, expired_item, restricted, di
                         //Display details
                         $("#id_label").html(data.label);
                         $("#hid_label").val(unsanitizeString(data.label));
-                        $("#id_pw").html('<?php echo $var['hidden_asterisk'];?>');
+                        if (data.pw === "" && $("#create_item_without_password").val() === "1"){
+                            $("#id_pw").html('');
+                        } else {
+                            $("#id_pw").html('<?php echo $var['hidden_asterisk'];?>');
+                        }
                         $("#hid_pw").val(unsanitizeString(data.pw));
                         if (data.url != "") {
                             $("#id_url").html(data.url+data.link);

@@ -289,7 +289,8 @@ $val = array(
 	array('admin','duo','0', 0),
 	array('admin','enable_server_password_change','0', 0),
 	array('admin','bck_script_path', $_SESSION['abspath']."/backups", 0),
-	array('admin','bck_script_filename', 'bck_cpassman', 0)
+	array('admin','bck_script_filename', 'bck_cpassman', 0),
+	array('admin','create_item_without_password', '0', 0)
 );
 $res1 = "na";
 foreach ($val as $elem) {
