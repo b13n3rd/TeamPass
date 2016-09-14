@@ -114,7 +114,8 @@ if (isset($_GET['group']) && isset($_GET['id'])) {
 // Is personal SK available
 echo '
 <input type="hidden" name="personal_sk_set" id="personal_sk_set" value="', isset($_SESSION['my_sk']) && !empty($_SESSION['my_sk']) ? '1':'0', '" />
-<input type="hidden" id="personal_upgrade_needed" value="', isset($_SESSION['settings']['enable_pf_feature']) && $_SESSION['settings']['enable_pf_feature'] == 1 && $_SESSION['user_admin'] != 1 && isset($_SESSION['user_upgrade_needed']) && $_SESSION['user_upgrade_needed'] == 1 ? '1':'0', '" />';
+<input type="hidden" id="personal_upgrade_needed" value="', isset($_SESSION['settings']['enable_pf_feature']) && $_SESSION['settings']['enable_pf_feature'] == 1 && $_SESSION['user_admin'] != 1 && isset($_SESSION['user_upgrade_needed']) && $_SESSION['user_upgrade_needed'] == 1 ? '1':'0', '" />
+<input type="hidden" id="user_change_personal_saltkey" value="', isset($_SESSION['settings']['use_md5_password_as_salt']) && $_SESSION['settings']['use_md5_password_as_salt'] == 1 && $_SESSION['user_admin'] != 1 && isset($_SESSION['user_change_personal_saltkey']) && $_SESSION['user_change_personal_saltkey'] == 1 ? '1':'0', '" />';
 // define what group todisplay in Tree
 if (isset($_COOKIE['jstree_select']) && !empty($_COOKIE['jstree_select'])) {
     $firstGroup = str_replace("#li_", "", $_COOKIE['jstree_select']);
@@ -941,6 +942,31 @@ if (isset($_SESSION['settings']['enable_pf_feature']) && $_SESSION['settings']['
         <div style="text-align:center;">
             <div>'.$LANG['pf_change_encryption'].'</div>
             <div id="dialog_upgrade_personal_passwords_status" style="margin:15px 0 15px 0; font-weight:bold;">', isset($_SESSION['my_sk']) ? $LANG['pf_sk_set'] : $LANG['pf_sk_not_set'], '</div>
+        </div>
+    </div>';
+}
+
+// Warn user about a required change of saltkey (option use_md5_password_as_salt enabled)
+if (isset($_SESSION['settings']['enable_pf_feature']) && $_SESSION['settings']['enable_pf_feature'] == 1
+    && $_SESSION['user_admin'] != 1
+    && isset($_SESSION['user_change_personal_saltkey']) && $_SESSION['user_change_personal_saltkey'] == 1
+) {    
+    echo '
+    <div id="dialog_user_change_personal_saltkey" style="display:none;">
+        <div style="text-align:center;">
+            <div>'.$LANG['pf_change_encryption_with_password_account'].'</div>
+            <div id="dialog_user_change_personal_saltkey_status" style="margin:15px 0 15px 0; font-weight:bold;">';
+    if (isset($_SESSION['settings']['use_md5_password_as_salt']) && $_SESSION['settings']['use_md5_password_as_salt'] == 1) {
+        echo $LANG['personal_saltkey_to_be_given'].': <input id="new_user_psk" type="text" />';
+    } else if (isset($_SESSION['settings']['use_md5_password_as_salt']) && $_SESSION['settings']['use_md5_password_as_salt'] == 0) {
+        // in this case, we need to ask the user about a new personal saltkey, and set his old psk as being md5(account_password)
+        echo '
+            '.$LANG['home_personal_saltkey'].': <input id="new_user_psk" type="text" /><br />
+            '.$LANG['used_pw'].': <input id="current_user_pwd" type="password" /><br />
+            '.$LANG['index_change_pw_confirmation'].': <input id="current_user_pwd_confirm" type="password" />';
+    }
+    echo '
+            </div>
         </div>
     </div>';
 }

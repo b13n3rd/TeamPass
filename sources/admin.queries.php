@@ -1294,25 +1294,26 @@ switch ($_POST['type']) {
                 $type,
                 'restricted_to_roles'
             );
-        }/* else
+        } else
         if ($dataReceived['field'] == "use_md5_password_as_salt" && $dataReceived['value'] == "0") {
-            // in case this option is changed, we need to warn the users to adapt
+            // in case this option is changed, we need to warn the users to adapt their passwords
             $rows = DB::query(
                 "SELECT id FROM ".prefix_table("users")."
-                WHERE admin != %i",
+                WHERE admin != %i AND personal_folder = %i",
                 "",
+                "1",
                 "1"
             );
             foreach ($rows as $record) {
                 DB::update(
                     prefix_table("users"),
                     array(
-                        'upgrade_needed' => "1"
+                        'change_personal_saltkey' => "1"
                     ),
                     "id = %i"
                 );
             }
-        }*/
+        }
 
         // store in SESSION
         $_SESSION['settings'][$dataReceived['field']] = $dataReceived['value'];

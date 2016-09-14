@@ -270,6 +270,11 @@ function ListerItems(groupe_id, restricted, start)
                     $("#dialog_upgrade_personal_passwords").dialog("open");
                 }
 
+                // warn about a required change of personal SK to align on password (use_md5_password_as_salt option is enabled)
+                if ($("#user_change_personal_saltkey").val() == "1" && data.recherche_group_pf === 1) {console.log("OPEN");
+                    $("#dialog_user_change_personal_saltkey").dialog("open");
+                }
+
                 if (data.error == "is_pf_but_no_saltkey") {
                     //warn user about his saltkey
                     $("#item_details_no_personal_saltkey").show();
@@ -3361,12 +3366,49 @@ if ($_SESSION['settings']['upload_imageresize_options'] == 1) {
                     "sources/utils.queries.php",
                     {
                         type    : "reencrypt_personal_pwd_start",
+                        action  : "upgrade_needed",
                         user_id : "<?php echo $_SESSION['user_id'];?>",
                         key     : "<?php echo $_SESSION['key'];?>"
                     },
                     function(data) {
                         if (data[0].error != "") {
                             $("#dialog_upgrade_personal_passwords_status").html(data[0].error).addClass("ui-state-error").show();
+                        } else {
+                            reEncryptPersonalPwds(data[0].pws_list, data[0].currentId, data[0].nb);
+                        }
+                    },
+                    "json"
+                );
+            },
+            "<?php echo $LANG['cancel_button'];?>": function() {
+                $(this).dialog("close");
+            }
+        }
+    });
+
+
+    // DIALOG BOX FOR user_change_personal_saltkey UPGRADE
+    $("#dialog_user_change_personal_saltkey").dialog({
+        bgiframe: true,
+        modal: true,
+        autoOpen: false,
+        width: 500,
+        height: 300,
+        title: "<?php echo $LANG['upgrade_needed'];?>",
+        buttons: {
+            "<?php echo $LANG['admin_action_db_backup_start_tip'];?>": function() {
+                $("#dialog_user_change_personal_saltkey").html('<i class="fa fa-cog fa-spin"></i>&nbsp;<?php echo $LANG['please_wait'];?>&nbsp;...&nbsp;<span id="reencryption_progress">0%</span>').attr("class","").show();
+                $.post(
+                    "sources/utils.queries.php",
+                    {
+                        type    : "reencrypt_personal_pwd_start",
+                        action  : "change_personal_saltkey",
+                        user_id : "<?php echo $_SESSION['user_id'];?>",
+                        key     : "<?php echo $_SESSION['key'];?>"
+                    },
+                    function(data) {
+                        if (data[0].error != "") {
+                            $("#dialog_user_change_personal_saltkey_status").html(data[0].error).addClass("ui-state-error").show();
                         } else {
                             reEncryptPersonalPwds(data[0].pws_list, data[0].currentId, data[0].nb);
                         }

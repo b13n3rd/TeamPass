@@ -120,7 +120,7 @@ switch ($_POST['type']) {
 
     #CASE start user personal pwd re-encryption
     case "reencrypt_personal_pwd_start":
-        if ($_POST['key'] != $_SESSION['key']) {
+        if ($_POST['key'] != $_SESSION['key'] || empty($_POST['action'])) {
             echo '[{"error" : "something_wrong"}]';
             break;
         }
@@ -143,18 +143,18 @@ switch ($_POST['type']) {
             }
         }
 
-        //
+        // update status for user
         DB::update(
             prefix_table('users'),
             array(
-                'upgrade_needed' => 0
+                $_POST['action'] => 0
                ),
             "id = %i",
             $_POST['user_id']
         );
-        $_SESSION['user_upgrade_needed'] = 0;
+        $_SESSION['user_'.$_POST['action']] = 0;
 
-        echo '[{"error" : "" , "pws_list" : "'.implode(',', $pws_list).'" , "currentId" : "'.$currentID.'" , "nb" : "'.count($pws_list).'"}]';
+        //echo '[{"error" : "" , "pws_list" : "'.implode(',', $pws_list).'" , "currentId" : "'.$currentID.'" , "nb" : "'.count($pws_list).'"}]';
         break;
 
 

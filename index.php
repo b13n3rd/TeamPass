@@ -237,7 +237,7 @@ if (isset($_SESSION['login'])) {
                         <li class="" style="padding:4px;width:40px; text-align:center;"><i class="fa fa-dashboard fa-fw"></i>&nbsp;
                             <ul class="menu_200" style="text-align:left;">',
                                 ($_SESSION['user_admin'] == 1 && $k['admin_full_right'] == true) ? '' :
-                                isset($_SESSION['settings']['enable_pf_feature']) && $_SESSION['settings']['enable_pf_feature'] == 1 ? '
+                                isset($_SESSION['settings']['enable_pf_feature']) && $_SESSION['settings']['enable_pf_feature'] == 1 && (!isset($_SESSION['settings']['use_md5_password_as_salt']) || $_SESSION['settings']['use_md5_password_as_salt'] == 0) ? '
                                 <li onclick="$(\'#div_set_personal_saltkey\').dialog(\'open\')">
                                     <i class="fa fa-key fa-fw"></i> &nbsp;'.$LANG['home_personal_saltkey_button'].'
                                 </li>' : '', '

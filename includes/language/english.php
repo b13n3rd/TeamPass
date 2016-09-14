@@ -57,6 +57,9 @@ global $LANG;
 $LANG = array (
     'enable_language_file' => '1', // Set to 0 to remove language from list. To translate, change to 1 to show this language in list. (future use)
     
+    'pf_change_encryption_with_password_account' => 'The policy concerning personal Saltkey has changed. Your personal passwords have to be re-encoded using new Saltkey. You shall run this process to use your personal passwords. This process may take several minutes depending on the number of items you have.',
+    'click_button_to_continu' => 'Click button to continu',
+    'personal_saltkey_to_be_given' => 'Provide your personal Saltkey (if you previously defined one, leave it empty if you have to personal items)',
     'user_ga_code' => 'Email Google Authentication to user',
     'send_ga_code' => 'Set and email Google Authentication code',
     'error_no_email' => 'This user has no email address set!',

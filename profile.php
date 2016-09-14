@@ -106,9 +106,14 @@ echo '
             <li id="but_pickfiles_photo"><i class="fa fa-camera fa-fw"></i> &nbsp;'.$LANG['upload_new_avatar'].'</li>';
             if (!isset($_SESSION['settings']['duo']) || $_SESSION['settings']['duo'] == 0) echo '
             <li id="but_change_password"><i class="fa fa-key fa-fw"></i> &nbsp;'.$LANG['index_change_pw'].'</li>';
+            if (isset($_SESSION['settings']['use_md5_password_as_salt']) && $_SESSION['settings']['use_md5_password_as_salt'] == 1) {
+                // don't show those options
+            } else {
+                echo '
+                <li id="but_change_psk"><i class="fa fa-lock fa-fw"></i> &nbsp;'.$LANG['menu_title_new_personal_saltkey'].'</li>
+                <li id="but_reset_psk"><i class="fa fa-eraser fa-fw"></i> &nbsp;'.$LANG['personal_saltkey_lost'].'</li>';
+            }
             echo '
-            <li id="but_change_psk"><i class="fa fa-lock fa-fw"></i> &nbsp;'.$LANG['menu_title_new_personal_saltkey'].'</li>
-            <li id="but_reset_psk"><i class="fa fa-eraser fa-fw"></i> &nbsp;'.$LANG['personal_saltkey_lost'].'</li>
          </ul>
       </li>
    </ul>
@@ -136,6 +141,7 @@ if (!isset($_SESSION['settings']['duo']) || $_SESSION['settings']['duo'] == 0)
     </div>';
 
 //change the saltkey dialogbox
+// Disabled if use_md5_password_as_salt enabled
 echo '
     <div id="div_change_psk" style="display:none;padding:4px;">
       <div style="margin-bottom:4px; padding:6px;" class="ui-state-highlight">
@@ -152,7 +158,6 @@ echo '
          <span id="psk_change_wait" style="display:none;"><i class="fa fa-cog fa-spin"></i>&nbsp;<span id="psk_change_wait_info">'.$LANG['please_wait'].'</span></span>
       </div>
    </div>';
-
 
 //saltkey LOST dialogbox
 echo '
@@ -172,6 +177,7 @@ echo '
       </div>
 
    </div>';
+
 echo '
 
    <div style="display:none;margin:5px 0 10px 0;text-align:center;padding:4px;" id="field_warning" class="ui-widget-content ui-state-error ui-corner-all"></div>

@@ -523,6 +523,7 @@ global \$SETTINGS;
                             `treeloadstrategy` varchar(30) NOT null DEFAULT 'full',
                             `can_manage_all_users` tinyint(1) NOT NULL DEFAULT '0',
                             `usertimezone` VARCHAR(50) NOT NULL DEFAULT 'not_defined',
+                            `change_personal_saltkey` tinyint(1) NOT NULL DEFAULT '0',
                             PRIMARY KEY (`id`),
                             UNIQUE KEY `login` (`login`)
                             ) CHARSET=utf8;"
