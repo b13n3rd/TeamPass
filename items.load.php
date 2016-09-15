@@ -271,7 +271,7 @@ function ListerItems(groupe_id, restricted, start)
                 }
 
                 // warn about a required change of personal SK to align on password (use_md5_password_as_salt option is enabled)
-                if ($("#user_change_personal_saltkey").val() == "1" && data.recherche_group_pf === 1) {console.log("OPEN");
+                if ($("#user_change_personal_saltkey").val() == "1" && data.recherche_group_pf === 1) {
                     $("#dialog_user_change_personal_saltkey").dialog("open");
                 }
 
@@ -3361,7 +3361,7 @@ if ($_SESSION['settings']['upload_imageresize_options'] == 1) {
         title: "<?php echo $LANG['upgrade_needed'];?>",
         buttons: {
             "<?php echo $LANG['admin_action_db_backup_start_tip'];?>": function() {
-                $("#dialog_upgrade_personal_passwords_status").html('<i class="fa fa-cog fa-spin"></i>&nbsp;<?php echo $LANG['please_wait'];?>&nbsp;...&nbsp;<span id="reencryption_progress">0%</span>').attr("class","").show();
+                $("#dialog_upgrade_personal_passwords_status").append('<br><br><i class="fa fa-cog fa-spin"></i>&nbsp;<?php echo $LANG['please_wait'];?>&nbsp;...&nbsp;<span id="reencryption_progress">0%</span>').attr("class","").show();
                 $.post(
                     "sources/utils.queries.php",
                     {
@@ -3387,7 +3387,7 @@ if ($_SESSION['settings']['upload_imageresize_options'] == 1) {
     });
 
 
-    // DIALOG BOX FOR user_change_personal_saltkey UPGRADE
+    // DIALOG BOX FOR user_change_personal_saltkey UPGRADE (#1473)
     $("#dialog_user_change_personal_saltkey").dialog({
         bgiframe: true,
         modal: true,
@@ -3397,7 +3397,7 @@ if ($_SESSION['settings']['upload_imageresize_options'] == 1) {
         title: "<?php echo $LANG['upgrade_needed'];?>",
         buttons: {
             "<?php echo $LANG['admin_action_db_backup_start_tip'];?>": function() {
-                $("#dialog_user_change_personal_saltkey").html('<i class="fa fa-cog fa-spin"></i>&nbsp;<?php echo $LANG['please_wait'];?>&nbsp;...&nbsp;<span id="reencryption_progress">0%</span>').attr("class","").show();
+                $("#dialog_user_change_personal_saltkey").append('<div id="reencryption_progress_msg" style="text-align:center"><i class="fa fa-cog fa-spin"></i>&nbsp;<?php echo $LANG['please_wait'];?>&nbsp;...&nbsp;<span id="reencryption_progress">0%</span></div>').attr("class","").show();
                 $.post(
                     "sources/utils.queries.php",
                     {
@@ -3408,9 +3408,16 @@ if ($_SESSION['settings']['upload_imageresize_options'] == 1) {
                     },
                     function(data) {
                         if (data[0].error != "") {
-                            $("#dialog_user_change_personal_saltkey_status").html(data[0].error).addClass("ui-state-error").show();
+                            $("#reencryption_progress_msg").html(data[0].error).addClass("ui-state-error").show();
                         } else {
-                            reEncryptPersonalPwds(data[0].pws_list, data[0].currentId, data[0].nb);
+                            
+                            // launch re-encryption
+                            changePSKOnPersonalUserItems(
+                                data[0].pws_list, 
+                                data[0].currentId, 
+                                data[0].nb,
+                                $("#new_user_psk").length ? $("#new_user_psk").val() : ""
+                            );
                         }
                     },
                     "json"
@@ -3859,9 +3866,9 @@ function loadImportDialog()
     }).dialog("open");
 }
 
-function reEncryptPersonalPwds(remainingIds, currentId, nb)
+function reEncryptPersonalPwds(remainingIds, currentId, nb, currentPSK)
 {
-    //console.log(remainingIds+";"+currentId+";"+nb);
+    currentPSK = currentPSK || "";
     $("#dialog_upgrade_personal_passwords_status").html('<i class="fa fa-cog fa-spin"></i>&nbsp;<?php echo $LANG['please_wait'];?>&nbsp;...&nbsp;<span id="reencryption_progress">0%</span>').attr("class","").show();
 
     $.ajax({
@@ -3871,6 +3878,7 @@ function reEncryptPersonalPwds(remainingIds, currentId, nb)
         data : {
             type        : "reencrypt_personal_pwd",
             currentId   : currentId,
+            currentPSK  : currentPSK,
             user_id     : "<?php echo $_SESSION['user_id'];?>",
             key         : "<?php echo $_SESSION['key'];?>"
         },
@@ -3880,17 +3888,59 @@ function reEncryptPersonalPwds(remainingIds, currentId, nb)
             aIds.shift();
             var nb2 = aIds.length;
             aIds = aIds.toString();
-            if (nb == 0)
+            if (nb == 0) {
                 $("#reencryption_progress").html("100%");
-            else
+            } else {
                 $("#reencryption_progress").html(Math.floor(((nb-nb2) / nb) * 100)+"%");
-
+            }
+            
             if (nb2 != "0" || (nb2 == "" && currentID != "")) {
-                reEncryptPersonalPwds(aIds, currentID, nb);
+                reEncryptPersonalPwds(aIds, currentID, nb, currentPSK);
             } else {
                 $("#dialog_upgrade_personal_passwords_status").html('<i class="fa fa-info"></i>&nbsp;<?php echo $LANG['operation_encryption_done'];?>');
                 // disable button
                 $("#dialog_upgrade_personal_passwords ~ .ui-dialog-buttonpane").find("button:contains('<?php echo $LANG['admin_action_db_backup_start_tip'];?>')").prop("disabled", false);
+            }
+        }
+    });
+}
+
+/*
+** Permits to adapt personal items once the user changes his SK (#1473)
+*/
+function changePSKOnPersonalUserItems(remainingIds, currentId, nb, currentPSK)
+{
+    $("#reencryption_progress_msg").html('<i class="fa fa-cog fa-spin"></i>&nbsp;<?php echo $LANG['please_wait'];?>&nbsp;...&nbsp;<span id="reencryption_progress">0%</span>').attr("class","").show();
+
+    $.ajax({
+        url: "sources/utils.queries.php",
+        type : 'POST',
+        dataType : "json",
+        data : {
+            type        : "change_personal_SK",
+            currentId   : currentId,
+            currentPSK  : currentPSK,
+            user_id     : "<?php echo $_SESSION['user_id'];?>",
+            key         : "<?php echo $_SESSION['key'];?>"
+        },
+        complete : function(data, statut){
+            var aIds = remainingIds.split(",");
+            var currentID = aIds[0];
+            aIds.shift();
+            var nb2 = aIds.length;
+            aIds = aIds.toString();
+            if (nb == 0) {
+                $("#reencryption_progress").html("100%");
+            } else {
+                $("#reencryption_progress").html(Math.floor(((nb-nb2) / nb) * 100)+"%");
+            }
+            
+            if (nb2 != "0" || (nb2 == "" && currentID != "")) {
+                changePSKOnPersonalUserItems(aIds, currentID, nb, currentPSK);
+            } else {console.log(nb2+" -- "+currentID);
+                $("#reencryption_progress_msg").html('<i class="fa fa-info"></i>&nbsp;<?php echo $LANG['operation_encryption_done'];?>');
+                // disable button
+                $("#dialog_user_change_personal_saltkey ~ .ui-dialog-buttonpane").find("button:contains('<?php echo $LANG['admin_action_db_backup_start_tip'];?>')").prop("disabled", false);
             }
         }
     });

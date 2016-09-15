@@ -127,19 +127,41 @@ switch ($_POST['type']) {
 
         $currentID = "";
         $pws_list = array();
-        $rows = DB::query(
-            "SELECT i.id AS id
-            FROM  ".prefix_table("nested_tree")." AS n
-            LEFT JOIN ".prefix_table("items")." AS i ON i.id_tree = n.id
-            WHERE i.perso = %i AND n.title = %i",
+        
+        // get PF folder ID
+        $rows = DB::queryfirstrow(
+            "SELECT id
+            FROM  ".prefix_table("nested_tree")."
+            WHERE personal_folder = %i AND title = %i",
             "1",
             $_POST['user_id']
         );
-        foreach ($rows as $record) {
-            if (empty($currentID)) {
-                $currentID = $record['id'];
-            } else {
-                array_push($pws_list, $record['id']);
+        
+        if (!isset($rows['id']) || empty($rows['id'])) {
+            echo '[{"error" : "something_wrong"}]';
+            break;
+        }
+        
+        // loop on personal folders
+        require_once $_SESSION['settings']['cpassman_dir'].'/sources/SplClassLoader.php';
+        $tree = new SplClassLoader('Tree\NestedTree', $_SESSION['settings']['cpassman_dir'].'/includes/libraries');
+        $tree->register();
+        $tree = new Tree\NestedTree\NestedTree($pre.'nested_tree', 'id', 'parent_id', 'title');
+        $nodeDescendants = $tree->getDescendants($rows['id'], true, false, true);
+        foreach ($nodeDescendants as $node) {
+            // get item iDs in each folder
+            $rows = DB::query(
+                "SELECT id
+                FROM  ".prefix_table("items")."
+                WHERE id_tree = %i",
+                $node
+            );
+            foreach ($rows as $record) {
+                if (empty($currentID)) {
+                    $currentID = $record['id'];
+                } else {
+                    array_push($pws_list, $record['id']);
+                }
             }
         }
 
@@ -154,8 +176,61 @@ switch ($_POST['type']) {
         );
         $_SESSION['user_'.$_POST['action']] = 0;
 
-        //echo '[{"error" : "" , "pws_list" : "'.implode(',', $pws_list).'" , "currentId" : "'.$currentID.'" , "nb" : "'.count($pws_list).'"}]';
+        echo '[{"error" : "" , "pws_list" : "'.implode(',', $pws_list).'" , "currentId" : "'.$currentID.'" , "nb" : "'.count($pws_list).'"}]';
         break;
+        
+        
+    #CASE where user decides to change his PSK (#1473)
+    case "change_personal_SK":
+        if ($_POST['key'] != $_SESSION['key']) {
+            echo '[{"error" : "something_wrong"}]';
+            break;
+        }
+        if (empty($_POST['currentId'])) {
+            echo '[{"error" : "No ID provided"}]';
+            break;
+        }
+        
+        if (isset($_POST['currentPSK']) && !empty($_POST['currentPSK'])) {
+            // get data about pw
+            $data = DB::queryfirstrow(
+                "SELECT id, pw, pw_iv
+                FROM ".prefix_table("items")."
+                WHERE id = %i",
+                $_POST['currentId']
+            );
+            
+            // decrypt
+            $pw = cryption(
+                $data['pw'], 
+                $_POST['currentPSK'], 
+                $data['pw_iv'], 
+                "decrypt"
+            );
+            
+            if (isUTF8($pw['string'])) {
+                
+                // encrypt it
+                $encrypt = cryption($pw['string'], $_SESSION['my_sk'], "", "encrypt");
+
+                // store Password
+                DB::update(
+                    prefix_table('items'),
+                    array(
+                        'pw' => $encrypt['string'],
+                        'pw_iv' => $encrypt['iv']
+                       ),
+                    "id = %i",
+                    $_POST['currentId']
+                );
+                echo '[{"error" : "" , "tst" : "'.addslashes($pw['string']).'"}]';
+            }
+        } else {
+            echo '[{"error" : "No current PSK provided"}]';
+            break;
+        }
+        break;
+            
 
 
     #CASE user personal pwd re-encryption
@@ -168,6 +243,7 @@ switch ($_POST['type']) {
             echo '[{"error" : "No ID provided"}]';
             break;
         }
+        
         if (isset($_POST['data_to_share'])) {
             // ON DEMAND
 
