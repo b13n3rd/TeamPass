@@ -1295,12 +1295,11 @@ switch ($_POST['type']) {
                 'restricted_to_roles'
             );
         } else
-        if ($dataReceived['field'] == "use_md5_password_as_salt" && $dataReceived['value'] == "0") {
+        if ($dataReceived['field'] == "use_md5_password_as_salt") {
             // in case this option is changed, we need to warn the users to adapt their passwords
             $rows = DB::query(
                 "SELECT id FROM ".prefix_table("users")."
                 WHERE admin != %i AND personal_folder = %i",
-                "",
                 "1",
                 "1"
             );
@@ -1310,7 +1309,8 @@ switch ($_POST['type']) {
                     array(
                         'change_personal_saltkey' => "1"
                     ),
-                    "id = %i"
+                    "id = %i",
+                    $record['id']
                 );
             }
         }

@@ -3938,9 +3938,12 @@ function changePSKOnPersonalUserItems(remainingIds, currentId, nb, currentPSK)
             if (nb2 != "0" || (nb2 == "" && currentID != "")) {
                 changePSKOnPersonalUserItems(aIds, currentID, nb, currentPSK);
             } else {console.log(nb2+" -- "+currentID);
-                $("#reencryption_progress_msg").html('<i class="fa fa-info"></i>&nbsp;<?php echo $LANG['operation_encryption_done'];?>');
+                $("#reencryption_progress_msg").html('<i class="fa fa-info"></i>&nbsp;<?php echo $LANG['alert_page_will_reload'];?>');
                 // disable button
                 $("#dialog_user_change_personal_saltkey ~ .ui-dialog-buttonpane").find("button:contains('<?php echo $LANG['admin_action_db_backup_start_tip'];?>')").prop("disabled", false);
+                setTimeout(function(){  
+                    location.reload();
+                }, 1500);
             }
         }
     });
